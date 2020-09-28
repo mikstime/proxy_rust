@@ -1,6 +1,4 @@
-use hyper::{Body, Client, Method, Request, Response};
-use serde::de;
-use serde::ser;
+use hyper::Request;
 
 fn serialize(parts: Parts) -> serde_json::Result<Parts>
 {

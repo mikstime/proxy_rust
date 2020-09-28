@@ -5,7 +5,7 @@ use hyper::service::{make_service_fn, service_fn};
 use hyper::{Client, Server};
 
 type HttpClient = Client<hyper::client::HttpConnector>;
-mod proxy_handler;
+pub mod proxy_handler;
 use proxy_handler::proxy;
 
 fn error(err: String) -> std::io::Error {
@@ -42,7 +42,7 @@ pub async fn run() -> std::io::Result<()> {
     use std::fs::File;
     use std::sync::Arc;
     use std::io::{self, BufReader};
-    use std::path::{Path, PathBuf};
+    use std::path::{Path};
 
     fn load_certs(path: &Path) -> io::Result<Vec<Certificate>> {
         certs(&mut BufReader::new(File::open(path)?))

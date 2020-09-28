@@ -1,33 +1,45 @@
 use hyper::{Response, Request, Client, Body};
 use std::result::Result;
-use crate::proxy::proxy_handler::tunnel;
 type HttpClient = Client<hyper::client::HttpConnector>;
-use std::net::{SocketAddr, ToSocketAddrs};
 
-use futures::stream::{self, StreamExt, TryStreamExt};
+use futures::stream::{TryStreamExt};
+
+use async_std::fs::File;
+use async_std::io::prelude::*;
+use chrono::Utc;
 
 pub async fn store_request(req: Request<Body>) -> Request<Body> {
     let (parts, body) = req.into_parts();
 
     let first_line = format!("{} {} {:?}\r\n", parts.method, parts.uri, parts.version);
     let mut headers_lines = String::new();
-    for (key, val) in &parts.headers {
 
+    for (key, val) in &parts.headers {
         headers_lines += &format!("{}: {}\r\n", key.as_str(), String::from_utf8_lossy((*val).as_bytes()));
     }
+
     let entire_body = body
         .try_fold(Vec::new(), |mut data, chunk| async move {
             data.extend_from_slice(&chunk);
             Ok(data)
         })
         .await.unwrap();
+
     let body_string = String::from_utf8(entire_body).unwrap();
+    let now = Utc::now();
+
+    let file_name = format!("./requests/{}|||{}|||{}|||{}", uuid::Uuid::new_v4(), parts.method, parts.uri.host().unwrap(), now.timestamp_millis());
     let stored_req = format!("{}{}\r\n{}", first_line, headers_lines, body_string);
-    let file_name = format!("./requests/{}", parts.method, parts.uri, );
-    async_std::fs::File::create(file_name).await?;
-    println!("{}", stored_req);
+
     let body = Body::from(body_string);
     let req = Request::from_parts(parts, body);
+
+    let mut file = match File::create(file_name).await {
+        Ok(f) => f,
+        Err(err) => return req,
+    };
+    file.write_all(stored_req.as_bytes()).await;
+
     req
 }
 pub async fn http_request(client: HttpClient, req: Request<Body>) -> Result<Response<Body>, hyper::Error> {

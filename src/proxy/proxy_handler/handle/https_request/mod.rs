@@ -2,7 +2,6 @@ use hyper::{Response, Request, Client, Body};
 use std::result::Result;
 use crate::proxy::proxy_handler::tunnel;
 type HttpClient = Client<hyper::client::HttpConnector>;
-use std::net::{SocketAddr, ToSocketAddrs};
 
 mod host_addr;
 use host_addr::host_addr;

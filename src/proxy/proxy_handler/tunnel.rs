@@ -1,20 +1,13 @@
-use std::net::{SocketAddr, ToSocketAddrs};
+use std::net::SocketAddr;
 use futures_util::future::try_join;
 use hyper::upgrade::Upgraded;
-use hyper::{Body, Client, Method, Request, Response};
-use rustls::internal::pemfile;
-use tokio::net::TcpStream;
 
-use rustls::internal::pemfile::{certs, rsa_private_keys};
-use rustls::{Certificate, NoClientAuth, ServerConfig};
-use futures_util::TryStreamExt;
 use std::io;
-use std::result::Result;
 // Create a TCP connection to host:port, build a tunnel between the connection and
 // the upgraded connection
-pub async fn tunnel(mut upgraded: Upgraded, uri: String, acceptor: tokio_rustls::TlsAcceptor, addr: SocketAddr) -> std::io::Result<()> {
+pub async fn tunnel(upgraded: Upgraded, uri: String, acceptor: tokio_rustls::TlsAcceptor, addr: SocketAddr) -> std::io::Result<()> {
 
-    let mut upgraded = acceptor.accept(upgraded).await?;
+    let upgraded = acceptor.accept(upgraded).await?;
 
     use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
     let mut config = ClientConfig::new();
@@ -38,7 +31,7 @@ pub async fn tunnel(mut upgraded: Upgraded, uri: String, acceptor: tokio_rustls:
     let stream = tokio::net::TcpStream::connect(addr).await?;
     let domain = DNSNameRef::try_from_ascii_str(&uri)
         .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid dnsname"))?;
-    let mut stream = connector.connect(domain, stream).await?;
+    let stream = connector.connect(domain, stream).await?;
 
     // Proxying data
     {
