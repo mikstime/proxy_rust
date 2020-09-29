@@ -36,12 +36,15 @@ pub async fn run() -> std::io::Result<()> {
             }
         }
 
-        match first_word.as_ref() {
+        if let Err(e) = match first_word.as_ref() {
             "help" => show_help().await,
             "request" => show_request(match_line, &mut cfg).await,
             "history" => show_requests(match_line, &mut cfg).await,
             _ => {Ok(())},
-        };
+        } {
+            println!("Ошибка при выполнении команды: {}", line);
+            println!("Информация об ошибке: {}", e);
+        }
         line = "".to_string();
     }
     Ok(())

@@ -1,10 +1,11 @@
 use async_std::prelude::*;
 use crate::cli::Config;
 
-fn parse_line(line: &str, config: &mut Config) -> (i32, i32) {
+fn parse_line(line: &str, config: &mut Config) -> (i32, i32, bool) {
     let mut start = config.history.start;
     let mut end = config.history.end;
     let split_line = line.split(" ").collect::<Vec<&str>>();
+    let mut need_erase = false;
     if split_line.len() >= 3 {
         if split_line[1] == "page" {
             if split_line[2] == "+" {
@@ -19,18 +20,39 @@ fn parse_line(line: &str, config: &mut Config) -> (i32, i32) {
                     end -= 10;
                 }
             } else {
-                let num = split_line[2].parse::<i32>().unwrap();
+                let num = match split_line[2].parse::<i32>() {
+                    Ok(v) => v,
+                    Err(e) => {
+                        println!("Параметр page может принимать значения +/-/int");
+                        println!("Значение {} не является подходящим. Будет использовано предыдущее значение ({})", split_line[2], (start + 10) / 10);
+                        (start + 10) / 10
+                    }
+                };
                 start = num * 10 - 10;
                 end = start + 10;
             }
         }
+    } else if split_line.len() >= 2 && split_line[1] == "erase" {
+        need_erase = true;
     }
     config.history.start = start.clone();
     config.history.end = end.clone();
-    (start, end)
+    (start, end, need_erase)
+}
+pub async fn erase_history() -> std::io::Result<()> {
+    use async_std::fs;
+
+    fs::remove_dir_all("./requests").await?;
+    fs::create_dir("./requests").await?;
+    println!("История запросов успешно очищена");
+    Ok(())
 }
 pub async fn show_requests(line: &str, config: &mut Config) -> std::io::Result<()> {
-    let (start, end) = parse_line(line, config);
+
+    let (start, end, need_erase) = parse_line(line, config);
+    if need_erase {
+        return erase_history().await;
+    }
     let mut entries = async_std::fs::read_dir("./requests").await?;
     let mut cur = 0;
 
@@ -79,5 +101,8 @@ async fn print_table(list: Vec<Vec<String>>, config: &mut Config) {
         ]),)
     }
     let table = Table::new(rows, Default::default()).unwrap();
-    table.print_stdout();
+    if let Err(e) = table.print_stdout() {
+        println!("Ошибка при отображении таблицы.");
+        println!("Информация об ошибке: {}", e);
+    }
 }

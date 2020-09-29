@@ -9,6 +9,17 @@ use async_std::io::prelude::*;
 use chrono::Utc;
 
 pub async fn store_request(req: Request<Body>) -> Request<Body> {
+    let uri = format!("{}", req.uri());
+
+    let ct = match req.headers().contains_key(hyper::header::CONTENT_TYPE) {
+        true => format!("{:?}", req.headers()[hyper::header::CONTENT_TYPE]),
+        false => "".to_string()
+    };
+    if ct.contains("application/ocsp-request") {
+        return req;
+    }
+    let mut store_body = true;
+
     let (parts, body) = req.into_parts();
 
     let first_line = format!("{} {} {:?}\r\n", parts.method, parts.uri, parts.version);
@@ -17,18 +28,26 @@ pub async fn store_request(req: Request<Body>) -> Request<Body> {
     for (key, val) in &parts.headers {
         headers_lines += &format!("{}: {}\r\n", key.as_str(), String::from_utf8_lossy((*val).as_bytes()));
     }
+    if store_body {
 
+    }
     let entire_body = body
         .try_fold(Vec::new(), |mut data, chunk| async move {
             data.extend_from_slice(&chunk);
             Ok(data)
         })
         .await.unwrap();
-
-    let body_string = String::from_utf8(entire_body).unwrap();
+    let body_string = match String::from_utf8(entire_body) {
+        Ok(v) => v,
+        _ => "Body contains not UTF-8 symbols.".to_string()
+    };
     let now = Utc::now();
 
-    let file_name = format!("./requests/{}|||{}|||{}|||{}", uuid::Uuid::new_v4(), parts.method, parts.uri.host().unwrap(), now.timestamp_millis());
+    let host = match parts.uri.host() {
+        Some(h) => h,
+        None => "localhost"
+    };
+    let file_name = format!("./requests/{}|||{}|||{}|||{}", uuid::Uuid::new_v4(), parts.method, host, now.timestamp_millis());
     let stored_req = format!("{}{}\r\n{}", first_line, headers_lines, body_string);
 
     let body = Body::from(body_string);
@@ -36,9 +55,16 @@ pub async fn store_request(req: Request<Body>) -> Request<Body> {
 
     let mut file = match File::create(file_name).await {
         Ok(f) => f,
-        Err(err) => return req,
+        Err(e) => {
+            println!("Не удалось сохранить запрос =c");
+            println!("Информация об ошибке: {}", e);
+            return req
+        },
     };
-    file.write_all(stored_req.as_bytes()).await;
+    if let Err(e) = file.write_all(stored_req.as_bytes()).await {
+        println!("Не удалось сохранить запрос =c");
+        println!("Информация об ошибке: {}", e);
+    }
 
     req
 }

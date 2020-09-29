@@ -3,7 +3,6 @@ use std::result::Result;
 
 type HttpClient = Client<hyper::client::HttpConnector>;
 
-mod store;
 mod tunnel;
 pub mod handle;
 
