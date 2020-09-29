@@ -3,9 +3,8 @@ use std::result::Result;
 
 type HttpClient = Client<hyper::client::HttpConnector>;
 
-mod store;
 mod tunnel;
-mod handle;
+pub mod handle;
 
 pub async fn proxy(client: HttpClient, acceptor: tokio_rustls::TlsAcceptor,
                    req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
