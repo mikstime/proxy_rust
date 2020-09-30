@@ -40,7 +40,8 @@ pub async fn run() -> std::io::Result<()> {
             "help" => show_help().await,
             "request" => show_request(match_line, &mut cfg).await,
             "history" => show_requests(match_line, &mut cfg).await,
-            _ => {Ok(())},
+            "exit" => {std::process::exit(0);},
+            _ => {println!("Посмотреть информацию о доступных командах help");Ok(())},
         } {
             println!("Ошибка при выполнении команды: {}", line);
             println!("Информация об ошибке: {}", e);

@@ -2,13 +2,8 @@ use std::net::SocketAddr;
 use futures_util::future::try_join;
 use hyper::upgrade::Upgraded;
 
-use futures::stream::{TryStreamExt};
+use tokio::net::{TcpStream};
 
-use openssl::ssl::{SslAcceptor, SslConnector, SslFiletype, SslMethod};
-use tokio::io::{AsyncReadExt, AsyncWrite, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
-
-use std::io;
 //// Create a TCP connection to host:port, build a tunnel between the connection and
 //// the upgraded connection
 //pub async fn tunnel(upgraded: Upgraded, uri: String, acceptor: tokio_rustls::TlsAcceptor, addr: SocketAddr) -> std::io::Result<()> {
@@ -53,7 +48,7 @@ use std::io;
 //}
 // Create a TCP connection to host:port, build a tunnel between the connection and
 // the upgraded connection (without reading it);
-pub async fn tunnel(upgraded: Upgraded, uri: String, acceptor: tokio_rustls::TlsAcceptor, addr: SocketAddr) -> std::io::Result<()> {
+pub async fn tunnel(upgraded: Upgraded, _uri: String, _acceptor: tokio_rustls::TlsAcceptor, addr: SocketAddr) -> std::io::Result<()> {
 
     let stream = TcpStream::connect(&addr).await.unwrap();
 

@@ -8,23 +8,23 @@ edition = "2018"
 
 [dependencies]
 tokio-openssl = "0.4.0"
-openssl = "0.10.30"
+#openssl = "0.10.30"
 chrono = "0.4.18"
 uuid = { version = "0.8", features = ["v4"] }
 hyper = "0.13"
 futures = "0.3.5"
-native-tls = "0.2.4"
+#native-tls = "0.2.4"
 cli-table = "0.3"
-hyper-rustls = "0.21.0"
-async-tls = "0.10.0"
+#hyper-rustls = "0.21.0"
+#async-tls = "0.10.0"
 futures-util = "0.3.5"
 http = "0.2.1"
 tokio-rustls = "0.14.1"
 rustls = { version = "0.18.1", features=["dangerous_configuration"]}
-hyper-tls = "0.4.3"
-hyper-openssl = "0.8.0"
-webpki-roots = "0.20"
-async-native-tls = { version = "0.3", default-features = false, features = [ "runtime-tokio" ] }
+#hyper-tls = "0.4.3"
+#hyper-openssl = "0.8.0"
+#webpki-roots = "0.20"
+#async-native-tls = { version = "0.3", default-features = false, features = [ "runtime-tokio" ] }
 tokio = { version = "0.2", features = ["full"] }
 tokio-util = { version = "0.3.1", features=["compat"] }
 [dependencies.async-std]

