@@ -9,7 +9,10 @@ pub mod proxy_handler;
 use proxy_handler::proxy;
 
 pub async fn run() -> std::io::Result<()> {
-    let addr = SocketAddr::from(([127, 0, 0, 1], 1337));
+    let addr = match std::env::args().len() {
+        1 => SocketAddr::from(([127, 0, 0, 1], 1337)),
+        _ => SocketAddr::from(([0, 0, 0, 0], 1337)),
+    };
     let client = HttpClient::new();
 
     use tokio_rustls::rustls::internal::pemfile::{certs, rsa_private_keys};
@@ -30,6 +33,11 @@ pub async fn run() -> std::io::Result<()> {
             .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid key"))
     }
 
+    if !Path::new("./certs/ca.crt").exists() {
+         std::process::Command::new("./certs/gen_ca.sh")
+            .output()
+            .expect("failed to execute process");
+    }
     let cert_path = Path::new("./certs/ca.crt");
     let key_path = Path::new("./certs/ca.key");
     let certs = load_certs(&cert_path)?;
@@ -53,7 +61,7 @@ pub async fn run() -> std::io::Result<()> {
 
     let server = Server::bind(&addr).serve(make_service);
 
-    println!("Listening on http://{}", addr);
+    println!("Прокси запущен на: http://{}", addr);
 
     if let Err(e) = server.await {
         eprintln!("server error: {}", e);

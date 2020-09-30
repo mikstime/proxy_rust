@@ -9,7 +9,6 @@ use async_std::io::prelude::*;
 use chrono::Utc;
 
 pub async fn store_request(req: Request<Body>) -> Request<Body> {
-    let uri = format!("{}", req.uri());
 
     let ct = match req.headers().contains_key(hyper::header::CONTENT_TYPE) {
         true => format!("{:?}", req.headers()[hyper::header::CONTENT_TYPE]),
@@ -18,7 +17,6 @@ pub async fn store_request(req: Request<Body>) -> Request<Body> {
     if ct.contains("application/ocsp-request") {
         return req;
     }
-    let mut store_body = true;
 
     let (parts, body) = req.into_parts();
 
@@ -28,9 +26,7 @@ pub async fn store_request(req: Request<Body>) -> Request<Body> {
     for (key, val) in &parts.headers {
         headers_lines += &format!("{}: {}\r\n", key.as_str(), String::from_utf8_lossy((*val).as_bytes()));
     }
-    if store_body {
 
-    }
     let entire_body = body
         .try_fold(Vec::new(), |mut data, chunk| async move {
             data.extend_from_slice(&chunk);

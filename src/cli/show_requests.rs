@@ -22,7 +22,7 @@ fn parse_line(line: &str, config: &mut Config) -> (i32, i32, bool) {
             } else {
                 let num = match split_line[2].parse::<i32>() {
                     Ok(v) => v,
-                    Err(e) => {
+                    Err(_e) => {
                         println!("Параметр page может принимать значения +/-/int");
                         println!("Значение {} не является подходящим. Будет использовано предыдущее значение ({})", split_line[2], (start + 10) / 10);
                         (start + 10) / 10
